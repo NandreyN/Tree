@@ -3,46 +3,47 @@ package nandreyn;
 import java.util.List;
 import java.util.ArrayList;
 
-class Node {
-    Node leftChild;
-    Node rightChild;
-    Node parent;
-    int value;
 
-    Node(int n) {
-        value = n;
-        leftChild = null;
-        rightChild = null;
-        parent = null;
+public class Tree<T extends Number & Comparable<T>> {
+    class Node<T> {
+        Node<T> leftChild;
+        Node<T> rightChild;
+        Node<T> parent;
+        T value;
+
+        Node(T n) {
+            value = n;
+            leftChild = null;
+            rightChild = null;
+            parent = null;
+        }
+
+        int getChildrenNumber() {
+            if (leftChild != null && rightChild != null)
+                return 2;
+            if (leftChild == null && rightChild == null)
+                return 0;
+            return 1;
+        }
     }
 
-    int getChildrenNumber() {
-        if (leftChild != null && rightChild != null)
-            return 2;
-        if (leftChild == null && rightChild == null)
-            return 0;
-        return 1;
-    }
-}
-
-public class Tree {
-    private Node root;
+    private Node<T> root;
 
     public Tree() {
         root = null;
     }
 
-    public void add(int val) {
+    public void add(T val) {
         if (root == null) {
-            root = new Node(val);
+            root = new Node<>(val);
         } else {
-            Node rootCopy = root;
+            Node<T> rootCopy = root;
 
             while (true) {
 
-                if (val <= rootCopy.value) {
+                if (val.compareTo(rootCopy.value) < 0) {//val <= rootCopy.value) {
                     if (rootCopy.leftChild == null) {
-                        rootCopy.leftChild = new Node(val);
+                        rootCopy.leftChild = new Node<>(val);
 
                         rootCopy.leftChild.parent = rootCopy;
                         return;
@@ -50,7 +51,7 @@ public class Tree {
                     rootCopy = rootCopy.leftChild;
                 } else {
                     if (rootCopy.rightChild == null) {
-                        rootCopy.rightChild = new Node(val);
+                        rootCopy.rightChild = new Node<>(val);
                         rootCopy.rightChild.parent = rootCopy;
                         return;
                     }
@@ -60,20 +61,22 @@ public class Tree {
         }
     }
 
-    private boolean contains(Node rt, int val) {
+    private boolean contains(Node<T> rt, T val) {
         if (rt == null)
             return false;
 
-        return (rt.value == val) || contains(rt.leftChild, val) || contains(rt.rightChild, val);
+        if (val.compareTo(rt.value) < 0)
+            return (rt.value.compareTo(val) == 0) || contains(rt.leftChild, val);
+        return (rt.value.compareTo(val) == 0) || contains(rt.rightChild, val);
     }
 
-    public boolean contains(int val) {
+    public boolean contains(T val) {
         return contains(root, val);
     }
 
     public void print() {
         int maxLevels = maxLevels(root);
-        List<List<Node>> levelsData = new ArrayList<>(maxLevels);
+        List<List<Node<T>>> levelsData = new ArrayList<>(maxLevels);
 
         for (int level = 0; level < maxLevels; level++) {
             levelsData.add(getLevel(level));
@@ -82,15 +85,15 @@ public class Tree {
         System.out.print("");
     }
 
-    private List<Node> getLevel(int level) {
+    private List<Node<T>> getLevel(int level) {
         int i = 1;
-        List<Node> queue = new ArrayList<>();
+        List<Node<T>> queue = new ArrayList<>();
         queue.add(root);
 
         while (i <= level) {
-            List<Node> toPush = new ArrayList<>();
+            List<Node<T>> toPush = new ArrayList<>();
             while (!queue.isEmpty()) {
-                Node currentNode = queue.remove(0);
+                Node<T> currentNode = queue.remove(0);
                 if (currentNode != null) {
                     toPush.add(currentNode.leftChild);
                     toPush.add(currentNode.rightChild);
@@ -100,7 +103,7 @@ public class Tree {
                 }
             }
             queue.clear();
-            for (Node node : toPush)
+            for (Node<T> node : toPush)
                 queue.add(node);
 
             i++;
@@ -108,24 +111,24 @@ public class Tree {
         return queue;
     }
 
-    private void printLevel(List<Node> nodes, int level, int maxLevels) {
+    private void printLevel(List<Node<T>> nodes, int level, int maxLevels) {
         int diff = maxLevels - level;
         int spacesBetweenNodes = (int) Math.pow(2, diff + 1) - 1;
         int spacesFront = (int) Math.pow(2, diff) - 1;
 
-        printWhitespaces(spacesFront -1 );
-        for (Node node : nodes) {
+        printWhitespaces(spacesFront - 1);
+        for (Node<T> node : nodes) {
             if (node != null)
-                System.out.print(Integer.toString(node.value));
+                System.out.print(node.value.toString());
             else
                 printWhitespaces(1);
-            printWhitespaces(spacesBetweenNodes );
+            printWhitespaces(spacesBetweenNodes);
         }
 
         System.out.println();
         int edgeLines = (int) Math.pow(2, (Math.max(diff - 1, 0)));
         for (int i = 1; i <= edgeLines; i++) {
-            for (Node node : nodes) {
+            for (Node<T> node : nodes) {
                 printWhitespaces(spacesFront - i);
                 if (node == null) {
                     printWhitespaces(edgeLines + edgeLines + i + 1);
@@ -158,38 +161,38 @@ public class Tree {
         }
     }
 
-    private int maxLevels(Node rt) {
+    private int maxLevels(Node<T> rt) {
         if (rt == null) {
             return 0;
         }
         return Math.max(maxLevels(rt.leftChild), maxLevels(rt.rightChild)) + 1;
     }
 
-    private Node find(Node rt, int val) {
-        if (rt.value == val)
+    private Node<T> find(Node<T> rt, T val) {
+        if (rt.value.compareTo(val) == 0)
             return rt;
 
-        Node target = null;
+        Node<T> target = null;
 
-        if (rt.leftChild != null)
+        if (rt.leftChild != null && val.compareTo(rt.value) < 0)
             target = find(rt.leftChild, val);
 
         if (target != null)
             return target;
 
-        if (rt.rightChild != null)
+        if (rt.rightChild != null && val.compareTo(rt.value) >= 0)
             target = find(rt.rightChild, val);
 
         return target;
     }
 
-    public void remove(int val) {
+    public void remove(T val) {
         if (!contains(val)) {
             return;
         }
 
-        Node target = find(root, val);
-        Node parent = target.parent;
+        Node<T> target = find(root, val);
+        Node<T> parent = target.parent;
 
         boolean isTargetLeftChild = (parent.leftChild == target);
 
@@ -204,7 +207,7 @@ public class Tree {
         }
 
         if (target.getChildrenNumber() == 1) {
-            Node toPaste = (target.leftChild != null) ? target.leftChild : target.rightChild;
+            Node<T> toPaste = (target.leftChild != null) ? target.leftChild : target.rightChild;
             toPaste.parent = parent;
             if (isTargetLeftChild)
                 parent.leftChild = toPaste;
@@ -214,12 +217,20 @@ public class Tree {
             return;
         }
 
-        Node copy = target.rightChild;
+        Node<T> copy = target.rightChild;
         while (copy.leftChild != null)
             copy = copy.leftChild;
 
-        copy.parent.leftChild = null;
-        target.value = copy.value;
+        // zero ,one children
+        if (copy.getChildrenNumber() == 0) {
+            copy.parent = null;
+            target.value = copy.value;
+            return;
+        } else {
+            // right
+            remove(copy.value);
+            target.value = copy.value;
+        }
     }
 
     public void rootLeftRight() {
@@ -227,7 +238,7 @@ public class Tree {
         System.out.println("");
     }
 
-    public void rootLeftRight(Node root) {
+    public void rootLeftRight(Node<T> root) {
         if (root == null)
             return;
         System.out.print(root.value + " ");
@@ -240,7 +251,7 @@ public class Tree {
         System.out.println("");
     }
 
-    public void leftRightRoot(Node root) {
+    public void leftRightRoot(Node<T> root) {
         if (root == null)
             return;
         leftRightRoot(root.leftChild);
@@ -253,7 +264,7 @@ public class Tree {
         System.out.println("");
     }
 
-    public void leftRootRight(Node root) {
+    public void leftRootRight(Node<T> root) {
         if (root == null)
             return;
         leftRootRight(root.leftChild);
