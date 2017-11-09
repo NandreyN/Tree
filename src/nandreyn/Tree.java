@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 
-public class Tree<T extends Number & Comparable<T>> {
+public class Tree<T extends Comparable<T>> {
     class Node<T> {
         Node<T> leftChild;
         Node<T> rightChild;
