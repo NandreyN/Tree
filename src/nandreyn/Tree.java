@@ -8,14 +8,12 @@ public class Tree<T extends Comparable<T>> {
     class Node<T> {
         Node<T> leftChild;
         Node<T> rightChild;
-        Node<T> parent;
         T value;
 
         Node(T n) {
             value = n;
             leftChild = null;
             rightChild = null;
-            parent = null;
         }
 
         int getChildrenNumber() {
@@ -45,14 +43,12 @@ public class Tree<T extends Comparable<T>> {
                     if (rootCopy.leftChild == null) {
                         rootCopy.leftChild = new Node<>(val);
 
-                        rootCopy.leftChild.parent = rootCopy;
                         return;
                     }
                     rootCopy = rootCopy.leftChild;
                 } else {
                     if (rootCopy.rightChild == null) {
                         rootCopy.rightChild = new Node<>(val);
-                        rootCopy.rightChild.parent = rootCopy;
                         return;
                     }
                     rootCopy = rootCopy.rightChild;
@@ -186,51 +182,84 @@ public class Tree<T extends Comparable<T>> {
         return target;
     }
 
+    private Node<T> findParent(Node<T> current, Node<T> whatToSearch)
+    {
+        if (whatToSearch == root)
+            return null;
+
+        boolean leftCondition =current.leftChild != null && current.leftChild.value.compareTo(whatToSearch.value) == 0;
+        boolean rightCondition = current.rightChild != null && current.rightChild.value.compareTo(whatToSearch.value) == 0;
+        if (leftCondition || rightCondition)
+            return current;
+
+        if (whatToSearch.value.compareTo(current.value) < 0)
+            return findParent(current.leftChild, whatToSearch);
+        else
+            return findParent(current.rightChild, whatToSearch);
+
+    }
+
+    private void removeProcedureRoot()
+    {
+        removeProcedureTwoChildren(root);
+    }
+
+    private void removeProcedureLeaf(Node<T> parentNode, boolean isTargetLeftChild)
+    {
+        if (isTargetLeftChild)
+            parentNode.leftChild = null;
+        else
+            parentNode.rightChild = null;
+    }
+
+    private void removeProcedureOneChild(Node<T> targetNode, Node<T> parentNode, boolean isTargetLeftChild)
+    {
+        Node<T> toPaste = (targetNode.leftChild != null) ? targetNode.leftChild : targetNode.rightChild;
+        if (isTargetLeftChild)
+            parentNode.leftChild = toPaste;
+        else
+            parentNode.rightChild = toPaste;
+
+    }
+
+    private void removeProcedureTwoChildren(Node<T> targetNode)
+    {
+        Node<T> copy = targetNode.rightChild;
+        while (copy.leftChild != null)
+            copy = copy.leftChild;
+
+        if (copy.getChildrenNumber() == 0) {
+            targetNode.value = copy.value;
+        } else {
+            remove(copy.value);
+            targetNode.value = copy.value;
+        }
+    }
+
     public void remove(T val) {
         if (!contains(val)) {
             return;
         }
 
-        Node<T> target = find(root, val);
-        Node<T> parent = target.parent;
+        Node<T> targetNode = find(root,val);
+        Node<T> parentNode = findParent(root, targetNode);
+        if (parentNode == null) {
+            removeProcedureRoot();
+            return;
+        }
+        boolean isTargetLeftChild = (parentNode.leftChild == targetNode);
 
-        boolean isTargetLeftChild = (parent.leftChild == target);
-
-        if (target.getChildrenNumber() == 0) {
-            target.parent = null;
-
-            if (isTargetLeftChild)
-                parent.leftChild = null;
-            else
-                parent.rightChild = null;
+        if (targetNode.getChildrenNumber() == 0) {
+            removeProcedureLeaf(parentNode, isTargetLeftChild);
             return;
         }
 
-        if (target.getChildrenNumber() == 1) {
-            Node<T> toPaste = (target.leftChild != null) ? target.leftChild : target.rightChild;
-            toPaste.parent = parent;
-            if (isTargetLeftChild)
-                parent.leftChild = toPaste;
-            else
-                parent.rightChild = toPaste;
-
+        if (targetNode.getChildrenNumber() == 1) {
+            removeProcedureOneChild(targetNode,parentNode, isTargetLeftChild);
             return;
         }
 
-        Node<T> copy = target.rightChild;
-        while (copy.leftChild != null)
-            copy = copy.leftChild;
-
-        // zero ,one children
-        if (copy.getChildrenNumber() == 0) {
-            copy.parent = null;
-            target.value = copy.value;
-            return;
-        } else {
-            // right
-            remove(copy.value);
-            target.value = copy.value;
-        }
+        removeProcedureTwoChildren(targetNode);
     }
 
     public void rootLeftRight() {
